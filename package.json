@@ -2,6 +2,7 @@
   "name": "senangstart",
   "displayName": "SenangStart",
   "description": "Browse and copy UI components from SenangStart collection",
+  "publisher": "bookklik-technologies",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.85.0"
