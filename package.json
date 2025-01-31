@@ -3,11 +3,13 @@
   "displayName": "SenangStart",
   "description": "Browse and copy UI components from SenangStart collection",
   "publisher": "bookklik-technologies",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/bookklik-technologies/senangstart_vscode_ext"
   },
+  "license": "MIT",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
