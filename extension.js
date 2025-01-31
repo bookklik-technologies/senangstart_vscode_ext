@@ -8,20 +8,12 @@ class ComponentGridViewProvider {
     this._view = undefined;
     this.context = context;
     this.components = [];
-    this.iconsPath = path.join(context.extensionPath, 'media', 'component-icons');
-    this.ensureIconDirectory();
     this.lastFetchTimestamp = this.context.globalState.get('lastFetchTimestamp', 0);
     
     // Try to load cached components immediately
     const cachedComponents = this.context.globalState.get('cachedComponents', []);
     if (cachedComponents.length > 0) {
       this.components = cachedComponents;
-    }
-  }
-
-  ensureIconDirectory() {
-    if (!fs.existsSync(this.iconsPath)) {
-      fs.mkdirSync(this.iconsPath, { recursive: true });
     }
   }
 
@@ -72,42 +64,40 @@ class ComponentGridViewProvider {
     });
   }
 
-  async saveIcon(component) {
-    if (component.icon) {
-      const iconPath = path.join(this.iconsPath, `${component.slug}.svg`);
-      if (!fs.existsSync(iconPath)) {
-        fs.writeFileSync(iconPath, component.icon);
-      }
-      return iconPath;
-    }
-    return undefined;
-  }
-
   async fetchComponents() {
     try {
       // Show loading indicator in status bar
       const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
-      statusBar.text = "$(sync~spin) Fetching SenangStart components...";
+      statusBar.text = "$(sync~spin) Loading SenangStart components...";
       statusBar.show();
 
-      const response = await axios.get('https://senangstart.com/api/sections');
-      this.components = response.data;
+      // Read from local JSON file
+      const sectionsPath = path.join(this.context.extensionPath, 'media', 'sections.json');
       
-      // Save components to cache
-      await this.context.globalState.update('cachedComponents', this.components);
-      await this.context.globalState.update('lastFetchTimestamp', Date.now());
-      this.lastFetchTimestamp = Date.now();
-      
-      // Save icons for all components
-      for (const component of this.components) {
-        await this.saveIcon(component);
+      try {
+        const rawData = await fs.promises.readFile(sectionsPath, 'utf8');
+        this.components = JSON.parse(rawData);
+        
+        // Save components to cache
+        await this.context.globalState.update('cachedComponents', this.components);
+        await this.context.globalState.update('lastFetchTimestamp', Date.now());
+        this.lastFetchTimestamp = Date.now();
+        
+        // Save icons for all components
+        for (const component of this.components) {
+          await this.saveIcon(component);
+        }
+        
+        this.updateWebview();
+      } catch (err) {
+        vscode.window.showErrorMessage('Failed to load components: sections.json not found in media folder');
+        console.error('Error reading sections.json:', err);
       }
-      
-      this.updateWebview();
+
       statusBar.hide();
       statusBar.dispose();
     } catch (error) {
-      vscode.window.showErrorMessage('Failed to fetch components from SenangStart');
+      vscode.window.showErrorMessage('Failed to load SenangStart components');
     }
   }
 
@@ -145,7 +135,7 @@ class ComponentGridViewProvider {
           color: var(--vscode-editor-foreground);
         }
         .search-container {
-          margin-bottom: 15px;
+          margin-bottom: 8px;
         }
         #searchInput {
           width: 100%;
@@ -156,9 +146,9 @@ class ComponentGridViewProvider {
         }
         .grid-container {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
           gap: 16px;
-          padding: 16px 0;
+          padding: 8px 0;
         }
         .component-card {
           display: flex;
@@ -166,7 +156,7 @@ class ComponentGridViewProvider {
           align-items: center;
           cursor: grab;
           padding: 8px;
-          border-radius: 6px;
+          border-radius: 8px;
           background: var(--vscode-editor-background);
           border: 1px solid var(--vscode-widget-border);
           user-select: none;
@@ -184,13 +174,11 @@ class ComponentGridViewProvider {
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         .component-icon {
-          width: 100%;
-          height: 80px;
-          padding: 8px;
+          aspect-ratio: 322/191;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 8px;
+          margin-bottom: 4px;
           pointer-events: none;
         }
         .component-icon svg {
@@ -284,10 +272,9 @@ class ComponentGridViewProvider {
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(component.icon, 'image/svg+xml');
             const svgElement = svgDoc.documentElement;
-            
-            // Ensure SVG fills container
             svgElement.setAttribute('width', '100%');
             svgElement.setAttribute('height', '100%');
+            svgElement.setAttribute('viewBox', '0 0 322 191');
             
             // Create name element
             const name = document.createElement('div');
