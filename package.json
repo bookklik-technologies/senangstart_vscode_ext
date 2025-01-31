@@ -1,0 +1,44 @@
+{
+  "name": "senangstart",
+  "displayName": "SenangStart",
+  "description": "Browse and copy UI components from SenangStart collection",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "senangstart-sidebar",
+          "title": "SenangStart",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "senangstart-sidebar": [
+        {
+          "type": "webview",
+          "id": "senangstart-components",
+          "name": "Components"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "senangstart.refreshComponents",
+        "title": "Refresh Components",
+        "icon": "$(refresh)"
+      }
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}
