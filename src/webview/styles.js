@@ -193,26 +193,79 @@ module.exports = `
     padding: 2px 4px;
   }
 
-  /* Docs */
-  .docs-list {
+  /* Libraries */
+  /* Libraries */
+  .libraries-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
   }
-  .doc-link {
+
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .library-card {
     padding: 12px;
-    background: var(--vscode-textBlockQuote-background);
-    border-left: 4px solid var(--vscode-textBlockQuote-border);
-    color: var(--vscode-textLink-foreground);
-    text-decoration: none;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: default; /* Override pointer cursor from .card */
+  }
+
+  .library-label {
     font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--vscode-widget-border);
+    width: 100%;
+    padding-bottom: 8px;
+  }
+
+  .library-description {
+    font-size: 11px;
+    opacity: 0.8;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .library-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .library-link {
+    flex: 1;
+    padding: 6px 12px;
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    text-decoration: none;
+    font-size: 11px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    border-radius: 2px;
+    transition: background 0.1s;
+    text-align: center;
   }
-  .doc-link:hover {
-    text-decoration: underline;
-    background: var(--vscode-list-hoverBackground);
+
+  .library-link:hover {
+    text-decoration: none;
+    background: var(--vscode-button-secondaryHoverBackground);
+  }
+  
+  /* Retain style for the single top link if needed, or update it to match */
+  .libraries-list > .library-link {
+      background: var(--vscode-textBlockQuote-background);
+      border-left: 4px solid var(--vscode-textBlockQuote-border);
+      color: var(--vscode-textLink-foreground);
+      justify-content: flex-start;
   }
   
   .empty-state {

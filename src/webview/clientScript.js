@@ -17,7 +17,7 @@ module.exports = `
       
       // Toggle Search Visibility (hide for docs)
       document.getElementById('searchContainer').style.display = 
-        currentTab === 'docs' ? 'none' : 'flex';
+        currentTab === 'libraries' ? 'none' : 'flex';
       
       const iconTypeToggle = document.getElementById('iconTypeToggle');
       if (iconTypeToggle) {

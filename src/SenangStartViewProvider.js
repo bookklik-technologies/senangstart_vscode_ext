@@ -7,7 +7,7 @@ class SenangStartViewProvider {
   constructor(context) {
     this._view = undefined;
     this.context = context;
-    this.activeTab = 'sections'; // 'sections', 'icons', 'docs'
+    this.activeTab = 'sections'; // 'sections', 'icons', 'libraries'
     
     // Initialize Managers
     this.sectionsManager = new SectionsManager(context);
