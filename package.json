@@ -1,7 +1,7 @@
 {
   "name": "senangstart",
   "displayName": "SenangStart",
-  "description": "Browse and copy UI components from SenangStart collection",
+  "description": "Browse and copy UI sections from SenangStart collection",
   "publisher": "bookklik-technologies",
   "version": "0.0.4",
   "repository": {
@@ -17,7 +17,7 @@
     "Other"
   ],
   "activationEvents": ["onStartupFinished"],
-  "main": "./extension.js",
+  "main": "./src/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -32,15 +32,15 @@
       "senangstart-sidebar": [
         {
           "type": "webview",
-          "id": "senangstart-components",
-          "name": "Components"
+          "id": "senangstart-sections",
+          "name": "Sections"
         }
       ]
     },
     "commands": [
       {
-        "command": "senangstart.refreshComponents",
-        "title": "Refresh Components",
+        "command": "senangstart.refreshSections",
+        "title": "Refresh Sections",
         "icon": "$(refresh)"
       }
     ]

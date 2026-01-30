@@ -3,7 +3,7 @@
 This document provides context, standards, and workflows for agents working on the SenangStart VS Code Extension.
 
 ## 1. Project Overview
-**SenangStart** is a VS Code extension that enables developers to browse and drag-and-drop pre-built UI components directly into their editors.
+**SenangStart** is a VS Code extension that enables developers to browse and drag-and-drop pre-built UI sections directly into their editors.
 - **Publisher**: `bookklik-technologies`
 - **ID**: `senangstart`
 - **Entry Point**: `extension.js`
@@ -18,13 +18,13 @@ This document provides context, standards, and workflows for agents working on t
 - `extension.js`: Main extension logic (Activity Bar, Webview Provider, Command Registration).
 - `package.json`: Extension manifest (commands, views, configuration).
 - `media/`:
-  - `sections.json`: Local database of components (fallback/initial).
+  - `sections.json`: Local database of sections (fallback/initial).
   - `icon.svg` / `icon.png`: Extension icons.
 - `eslint.config.mjs`: Linting configuration.
 
 ## 4. Development Workflow
 - **Run/Debug**: Press `F5` in VS Code to launch the Extension Development Host.
-- **Refresh**: Use the command `SenangStart: Refresh Components` within the extension host to reload data.
+- **Refresh**: Use the command `SenangStart: Refresh Sections` within the extension host to reload data.
 - **Linting**: Run `npx eslint .` to check for style issues.
 - **Packaging**: Run `npx vsce package` to create a `.vsix` file for distribution.
 
@@ -47,5 +47,5 @@ This document provides context, standards, and workflows for agents working on t
 2. Ensure strict content security policy (CSP) if external resources are added.
 
 ## 7. Knowledge Base
-- **Components Cache**: Components are cached in `globalState` to reduce network calls.
+- **Sections Cache**: Sections are cached in `globalState` to reduce network calls.
 - **Icons**: SVG icons are processed and rendered directly in the Webview.

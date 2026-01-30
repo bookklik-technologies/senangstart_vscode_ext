@@ -3,17 +3,17 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 
-class ComponentGridViewProvider {
+class SectionGridViewProvider {
   constructor(context) {
     this._view = undefined;
     this.context = context;
-    this.components = [];
+    this.sections = [];
     this.lastFetchTimestamp = this.context.globalState.get('lastFetchTimestamp', 0);
     
-    // Try to load cached components immediately
-    const cachedComponents = this.context.globalState.get('cachedComponents', []);
-    if (cachedComponents.length > 0) {
-      this.components = cachedComponents;
+    // Try to load cached sections immediately
+    const cachedSections = this.context.globalState.get('cachedSections', []);
+    if (cachedSections.length > 0) {
+      this.sections = cachedSections;
     }
   }
 
@@ -31,44 +31,44 @@ class ComponentGridViewProvider {
     // Add visibility change handler
     webviewView.onDidChangeVisibility(() => {
       if (webviewView.visible) {
-        // Re-render components when view becomes visible
+        // Re-render sections when view becomes visible
         this.updateWebview();
       }
     });
     
-    // If we have cached components, show them immediately
-    if (this.components.length > 0) {
+    // If we have cached sections, show them immediately
+    if (this.sections.length > 0) {
       this.updateWebview();
     }
     
     // Then check if we need to refresh
     const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-    if (Date.now() - this.lastFetchTimestamp > CACHE_DURATION) {
-      this.fetchComponents();
+    if (this.sections.length === 0 || Date.now() - this.lastFetchTimestamp > CACHE_DURATION) {
+      this.fetchSections();
     }
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async message => {
       switch (message.command) {
-        case 'copyComponent':
-          const component = this.components.find(c => c.slug === message.slug);
-          if (component) {
-            await vscode.env.clipboard.writeText(component.code);
-            vscode.window.showInformationMessage(`${component.name} code copied to clipboard!`);
+        case 'copySection':
+          const section = this.sections.find(c => c.slug === message.slug);
+          if (section) {
+            await vscode.env.clipboard.writeText(section.code);
+            vscode.window.showInformationMessage(`${section.name} code copied to clipboard!`);
           }
           break;
         case 'search':
-          this.filterComponents(message.query);
+          this.filterSections(message.query);
           break;
       }
     });
   }
 
-  async fetchComponents() {
+  async fetchSections() {
     try {
       // Show loading indicator in status bar
       const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
-      statusBar.text = "$(sync~spin) Loading SenangStart components...";
+      statusBar.text = "$(sync~spin) Loading SenangStart sections...";
       statusBar.show();
 
       // Read from local JSON file
@@ -76,48 +76,43 @@ class ComponentGridViewProvider {
       
       try {
         const rawData = await fs.promises.readFile(sectionsPath, 'utf8');
-        this.components = JSON.parse(rawData);
+        this.sections = JSON.parse(rawData);
         
-        // Save components to cache
-        await this.context.globalState.update('cachedComponents', this.components);
+        // Save sections to cache
+        await this.context.globalState.update('cachedSections', this.sections);
         await this.context.globalState.update('lastFetchTimestamp', Date.now());
         this.lastFetchTimestamp = Date.now();
         
-        // Save icons for all components
-        for (const component of this.components) {
-          await this.saveIcon(component);
-        }
-        
         this.updateWebview();
       } catch (err) {
-        vscode.window.showErrorMessage('Failed to load components: sections.json not found in media folder');
+        vscode.window.showErrorMessage(`Failed to load sections: ${err.message}`);
         console.error('Error reading sections.json:', err);
       }
 
       statusBar.hide();
       statusBar.dispose();
     } catch (error) {
-      vscode.window.showErrorMessage('Failed to load SenangStart components');
+      vscode.window.showErrorMessage('Failed to load SenangStart sections');
     }
   }
 
-  filterComponents(query) {
-    const filteredComponents = this.components.filter(comp => 
-      comp.name.toLowerCase().includes(query.toLowerCase()) ||
-      comp.category.toLowerCase().includes(query.toLowerCase())
+  filterSections(query) {
+    const filteredSections = this.sections.filter(sec => 
+      sec.name.toLowerCase().includes(query.toLowerCase()) ||
+      sec.category.toLowerCase().includes(query.toLowerCase())
     );
-    this.updateWebview(filteredComponents);
+    this.updateWebview(filteredSections);
   }
 
-  updateWebview(components = this.components) {
+  updateWebview(sections = this.sections) {
     if (this._view && this._view.visible) {
       // Add a small delay to ensure the webview is ready
       setTimeout(() => {
         this._view.webview.postMessage({
-          command: 'updateComponents',
-          components: components.map(comp => ({
-            ...comp,
-            icon: comp.icon
+          command: 'updateSections',
+          sections: sections.map(sec => ({
+            ...sec,
+            icon: sec.icon
           }))
         });
       }, 100);
@@ -150,7 +145,7 @@ class ComponentGridViewProvider {
           gap: 16px;
           padding: 8px 0;
         }
-        .component-card {
+        .section-card {
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -162,18 +157,18 @@ class ComponentGridViewProvider {
           user-select: none;
           transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
-        .component-card:hover {
+        .section-card:hover {
           background: var(--vscode-list-hoverBackground);
         }
-        .component-card:active {
+        .section-card:active {
           cursor: grabbing;
           transform: scale(0.98);
         }
-        .component-card.dragging {
+        .section-card.dragging {
           opacity: 0.5;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
-        .component-icon {
+        .section-icon {
           aspect-ratio: 322/191;
           display: flex;
           align-items: center;
@@ -181,11 +176,11 @@ class ComponentGridViewProvider {
           margin-bottom: 4px;
           pointer-events: none;
         }
-        .component-icon svg {
+        .section-icon svg {
           width: 100%;
           height: 100%;
         }
-        .component-name {
+        .section-name {
           text-align: center;
           font-size: 12px;
           color: var(--vscode-editor-foreground);
@@ -202,14 +197,14 @@ class ComponentGridViewProvider {
     </head>
     <body>
       <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search components...">
+        <input type="text" id="searchInput" placeholder="Search sections...">
       </div>
-      <div class="grid-container" id="componentsGrid"></div>
+      <div class="grid-container" id="sectionsGrid"></div>
 
       <script>
         const vscode = acquireVsCodeApi();
         const searchInput = document.getElementById('searchInput');
-        const componentsGrid = document.getElementById('componentsGrid');
+        const sectionsGrid = document.getElementById('sectionsGrid');
 
         searchInput.addEventListener('input', (e) => {
           vscode.postMessage({
@@ -221,25 +216,25 @@ class ComponentGridViewProvider {
         window.addEventListener('message', event => {
           const message = event.data;
           switch (message.command) {
-            case 'updateComponents':
-              updateComponentsGrid(message.components);
+            case 'updateSections':
+              updateSectionsGrid(message.sections);
               break;
           }
         });
 
-        function updateComponentsGrid(components) {
-          // Clear existing components
-          componentsGrid.innerHTML = '';
+        function updateSectionsGrid(sections) {
+          // Clear existing sections
+          sectionsGrid.innerHTML = '';
           
-          components.forEach(component => {
+          sections.forEach(section => {
             // Create card element
             const card = document.createElement('div');
-            card.className = 'component-card';
+            card.className = 'section-card';
             card.setAttribute('draggable', 'true');
             
             // Add drag event listeners
             card.addEventListener('dragstart', (e) => {
-              e.dataTransfer.setData('text/plain', component.code);
+              e.dataTransfer.setData('text/plain', section.code);
               e.dataTransfer.effectAllowed = 'copy';
               
               // Add dragging class for visual feedback
@@ -262,15 +257,15 @@ class ComponentGridViewProvider {
             });
             
             // Keep click to copy functionality
-            card.addEventListener('click', () => copyComponent(component.slug));
+            card.addEventListener('click', () => copySection(section.slug));
             
             // Create icon container
             const iconContainer = document.createElement('div');
-            iconContainer.className = 'component-icon';
+            iconContainer.className = 'section-icon';
             
             // Create SVG element safely
             const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(component.icon, 'image/svg+xml');
+            const svgDoc = parser.parseFromString(section.icon, 'image/svg+xml');
             const svgElement = svgDoc.documentElement;
             svgElement.setAttribute('width', '100%');
             svgElement.setAttribute('height', '100%');
@@ -278,20 +273,20 @@ class ComponentGridViewProvider {
             
             // Create name element
             const name = document.createElement('div');
-            name.className = 'component-name';
-            name.textContent = component.name;
+            name.className = 'section-name';
+            name.textContent = section.name;
             
             // Assemble the card
             iconContainer.appendChild(svgElement);
             card.appendChild(iconContainer);
             card.appendChild(name);
-            componentsGrid.appendChild(card);
+            sectionsGrid.appendChild(card);
           });
         }
 
-        function copyComponent(slug) {
+        function copySection(slug) {
           vscode.postMessage({
-            command: 'copyComponent',
+            command: 'copySection',
             slug: slug
           });
         }
@@ -302,14 +297,14 @@ class ComponentGridViewProvider {
 }
 
 function activate(context) {
-  const provider = new ComponentGridViewProvider(context);
+  const provider = new SectionGridViewProvider(context);
   
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('senangstart-components', provider)
+    vscode.window.registerWebviewViewProvider('senangstart-sections', provider)
   );
 
-  let refreshDisposable = vscode.commands.registerCommand('senangstart.refreshComponents', () => {
-    provider.fetchComponents();
+  let refreshDisposable = vscode.commands.registerCommand('senangstart.refreshSections', () => {
+    provider.fetchSections();
   });
 
   context.subscriptions.push(refreshDisposable);
