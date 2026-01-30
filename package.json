@@ -16,7 +16,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./src/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -33,7 +35,7 @@
         {
           "type": "webview",
           "id": "senangstart-sections",
-          "name": "Sections"
+          "name": "Library"
         }
       ]
     },
@@ -46,6 +48,7 @@
     ]
   },
   "dependencies": {
+    "@bookklik/senangstart-icons": "^1.0.14",
     "axios": "^1.6.2"
   }
 }
