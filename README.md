@@ -1,6 +1,6 @@
-# SenangStart Sections Drag & Drop
+# SenangStart VS Code Extension
 
-**SenangStart** is a Visual Studio Code extension that simplifies integrating pre-built sections from [SenangStart](https://senangstart.com/#) directly into your code. With an intuitive drag-and-drop interface, you can quickly insert well-designed sections into your project, streamlining your development workflow.
+**SenangStart** is a Visual Studio Code extension that simplifies integrating pre-built sections, icons, and libraries from the SenangStart ecosystem directly into your code. With an intuitive interface, you can quickly insert well-designed sections, find icons, and access documentation, streamlining your development workflow.
 
 ## Table of Contents
 
@@ -11,34 +11,39 @@
 
 ## Features
 
-- **Intuitive Drag & Drop:** Easily drag sections from the SenangStart collection into your code editor.
-- **Pre-Built Section Collections:** Access a variety of well-designed sections ideal for websites, landing pages, and more.
-- **Seamless Integration:** Works directly within VS Code, allowing you to focus on coding.
-- **Customizable Inserts:** Adjust inserted code snippets to fit your project’s needs.
-- **Regular Updates:** Stay up-to-date with new sections and improvements from SenangStart.
+- **Sections (Drag & Drop):** Browse a collection of well-designed UI sections and drag them directly into your editor.
+- **Icons Manager:** Search and use icons from `@bookklik/senangstart-icons`.
+    - **Two Modes:** Copy as an icon component (`<i class="ss-icon-name"></i>`) or raw SVG code.
+- **Libraries Access:** Quick access to documentation and resources for the SenangStart ecosystem:
+    - **SenangStart CSS:** Fluent CSS Style Utilities.
+    - **SenangStart Icons:** Customizable icon library.
+    - **SenangStart Actions:** Minimal JS framework.
 
 ## Installation
 
 **Via VS Code Marketplace:**
-   - Open Visual Studio Code.
-   - Go to the Extensions view by clicking on the Extensions icon in the Activity Bar on the side of the window or pressing `Ctrl+Shift+X`.
-   - Search for `SenangStart`.
-   - Click **Install**.
+1. Open Visual Studio Code.
+2. Go to the Extensions view (Ctrl+Shift+X).
+3. Search for `SenangStart`.
+4. Click **Install**.
 
 ## Usage
 
-1. **Open the SenangStart Panel:**
-   - Once the extension is installed, access the SenangStart panel from the VS Code sidebar.
-   - Browse the available section collections curated from SenangStart.
+Once installed, open the **SenangStart** view in the Activity Bar. The interface is divided into three tabs:
 
-2. **Drag and Drop:**
-   - Select the desired section.
-   - Drag the section directly into your open code file.
-   - The corresponding code snippet will be inserted at your cursor’s location.
+### 1. Sections
+- Browse the available section collections.
+- **Drag and drop** a section directly into your open code file to insert the snippet.
 
-3. **Customize as Needed:**
-   - Modify the inserted code to match your project’s styling or functionality requirements.
-   - Enjoy a faster, more efficient workflow when building your pages or applications.
+### 2. Icons
+- Switch to the **Icons** tab.
+- Use the search bar to find icons.
+- Toggle between **Icon Class** mode (default) and **SVG** mode using the buttons next to the search bar.
+- **Click** an icon to copy the code to your clipboard.
+
+### 3. Libraries
+- Switch to the **Libraries** tab.
+- Click on any card (CSS, Icons, Actions) or link to open the official documentation or GitHub repository in your browser.
 
 ## License
 
