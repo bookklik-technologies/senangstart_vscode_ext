@@ -3,7 +3,7 @@
   "displayName": "SenangStart",
   "description": "Browse and copy UI sections from SenangStart collection",
   "publisher": "bookklik-technologies",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bookklik-technologies/senangstart_vscode_ext"

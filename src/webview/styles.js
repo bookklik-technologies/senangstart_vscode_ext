@@ -44,6 +44,47 @@ module.exports = `
     padding: 10px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--vscode-widget-border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .button-group {
+    display: flex;
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .toggle-btn {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: none;
+    padding: 0;
+    width: 34px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    border-right: 1px solid var(--vscode-input-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toggle-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+  .toggle-btn:last-child {
+    border-right: none;
+  }
+  .toggle-btn:hover {
+     background: var(--vscode-button-secondaryHoverBackground);
+  }
+  .toggle-btn.active {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
   }
   #searchInput {
     width: 100%;

@@ -51,8 +51,12 @@ class SenangStartViewProvider {
         case 'copyIcon':
           const icon = this.iconsManager.getIconByName(message.name);
           if (icon) {
-            await vscode.env.clipboard.writeText(icon.svg);
-            vscode.window.showInformationMessage(`${icon.name} SVG copied!`);
+            const textToCopy = message.type === 'icon' 
+              ? `<ss-icon icon="${icon.name}"></ss-icon>` 
+              : icon.svg;
+              
+            await vscode.env.clipboard.writeText(textToCopy);
+            vscode.window.showInformationMessage(`${icon.name} copied!`);
           }
           break;
         case 'search':

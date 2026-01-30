@@ -2,6 +2,7 @@ module.exports = `
   const vscode = acquireVsCodeApi();
   const searchInput = document.getElementById('searchInput');
   let currentTab = 'sections';
+  let currentIconType = 'icon';
   
   // Tab Switching
   document.querySelectorAll('.tab').forEach(tab => {
@@ -16,12 +17,26 @@ module.exports = `
       
       // Toggle Search Visibility (hide for docs)
       document.getElementById('searchContainer').style.display = 
-        currentTab === 'docs' ? 'none' : 'block';
+        currentTab === 'docs' ? 'none' : 'flex';
+      
+      const iconTypeToggle = document.getElementById('iconTypeToggle');
+      if (iconTypeToggle) {
+        iconTypeToggle.style.display = currentTab === 'icons' ? 'flex' : 'none';
+      }
         
       // Rerun search for new tab context if there is a query
       if (searchInput.value) {
           triggerSearch();
       }
+    });
+  });
+  
+  // Icon Type Toggles
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentIconType = btn.dataset.type;
     });
   });
 
@@ -118,7 +133,11 @@ module.exports = `
 
       // Drag support
       card.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', icon.svg);
+        const textToDrag = currentIconType === 'icon' 
+            ? \`<ss-icon icon="\${icon.name}"></ss-icon>\` 
+            : icon.svg;
+
+        e.dataTransfer.setData('text/plain', textToDrag);
         e.dataTransfer.effectAllowed = 'copy';
         card.classList.add('dragging');
       });
@@ -128,7 +147,7 @@ module.exports = `
       });
       
       card.addEventListener('click', () => {
-        vscode.postMessage({ command: 'copyIcon', name: icon.name });
+        vscode.postMessage({ command: 'copyIcon', name: icon.name, type: currentIconType });
       });
 
       card.innerHTML = \`

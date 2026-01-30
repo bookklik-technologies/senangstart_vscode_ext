@@ -1,5 +1,6 @@
 const styles = require('./styles');
 const clientScript = require('./clientScript');
+const icons = require('@bookklik/senangstart-icons/icons');
 
 module.exports = {
   getWebviewContent() {
@@ -21,6 +22,10 @@ module.exports = {
 
       <div class="search-container" id="searchContainer">
         <input type="text" id="searchInput" placeholder="Search...">
+        <div class="button-group" id="iconTypeToggle" style="display: none;">
+          <button class="toggle-btn active" data-type="icon" title="Copy Icon Tag">${icons['shapes']}</button>
+          <button class="toggle-btn" data-type="svg" title="Copy SVG Code">${icons['code']}</button>
+        </div>
       </div>
 
       <div class="content-area">
