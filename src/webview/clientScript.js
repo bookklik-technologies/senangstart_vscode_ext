@@ -1,8 +1,11 @@
+const icons = require('@bookklik/senangstart-icons/icons');
+
 module.exports = `
   const vscode = acquireVsCodeApi();
   const searchInput = document.getElementById('searchInput');
   let currentTab = 'sections';
   let currentIconType = 'icon';
+  let currentSectionType = 'SS'; // Default to SS
   
   // Tab Switching
   document.querySelectorAll('.tab').forEach(tab => {
@@ -20,8 +23,14 @@ module.exports = `
         currentTab === 'libraries' ? 'none' : 'flex';
       
       const iconTypeToggle = document.getElementById('iconTypeToggle');
+      const sectionTypeToggle = document.getElementById('sectionTypeToggle');
+
       if (iconTypeToggle) {
         iconTypeToggle.style.display = currentTab === 'icons' ? 'flex' : 'none';
+      }
+      
+      if (sectionTypeToggle) {
+        sectionTypeToggle.style.display = currentTab === 'sections' ? 'flex' : 'none';
       }
         
       // Rerun search for new tab context if there is a query
@@ -33,10 +42,20 @@ module.exports = `
   
   // Icon Type Toggles
   document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.addEventListener('click', (e) => {
+      // Find parent group to only toggle buttons within the same group
+      const group = btn.closest('.button-group');
+      if (!group) return;
+
+      group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      currentIconType = btn.dataset.type;
+      
+      // Update state based on which group it belongs to
+      if (group.id === 'iconTypeToggle') {
+          currentIconType = btn.dataset.type;
+      } else if (group.id === 'sectionTypeToggle') {
+          currentSectionType = btn.dataset.type;
+      }
     });
   });
 
@@ -78,12 +97,16 @@ module.exports = `
       
       // Drag support
       card.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', section.code);
+        const textToDrag = currentSectionType === 'SS' && section.ss_code 
+          ? section.ss_code 
+          : section.code;
+
+        e.dataTransfer.setData('text/plain', textToDrag);
         e.dataTransfer.effectAllowed = 'copy';
       });
       
       card.addEventListener('click', () => {
-        vscode.postMessage({ command: 'copySection', slug: section.slug });
+        vscode.postMessage({ command: 'copySection', slug: section.slug, type: currentSectionType });
       });
 
       // Create preview container
@@ -92,18 +115,37 @@ module.exports = `
       
       // Create SVG element safely using DOMParser (restored logic)
       try {
+        if (!section.icon || section.icon.trim() === '') {
+          throw new Error('Empty icon');
+        }
+
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(section.icon, 'image/svg+xml');
+        const parserError = svgDoc.querySelector('parsererror');
+
+        if (parserError) {
+          throw new Error('SVG parsing error');
+        }
+
         const svgElement = svgDoc.documentElement;
         
         if (svgElement) {
           svgElement.setAttribute('width', '100%');
           svgElement.setAttribute('height', '100%');
-          svgElement.setAttribute('viewBox', '0 0 322 191');
+          // Use original viewBox if available, else default
+          if (!svgElement.hasAttribute('viewBox')) {
+             svgElement.setAttribute('viewBox', '0 0 322 191');
+          }
           preview.appendChild(svgElement);
         }
       } catch (e) {
-        console.error('Error parsing SVG for section', section.name, e);
+        // Render placeholder for failed/missing icons
+        preview.innerHTML = \`
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; aspect-ratio: 16/9; background: #f3f4f6; color: #9ca3af; font-size: 12px; font-weight: 500;">
+                ${icons['photo']}
+            </div>
+        \`;
+        // console.error('Error rendering icon for', section.name, e);
       }
 
       // Label

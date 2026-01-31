@@ -18,8 +18,19 @@ class SectionsManager {
   async fetchSections(force = false) {
     const CACHE_DURATION = 24 * 60 * 60 * 1000;
     
-    if (!force && this.sections.length > 0 && Date.now() - this.lastFetchTimestamp < CACHE_DURATION) {
-      return this.sections;
+    if (!force && this.sections.length > 0) {
+      const sectionsPath = path.join(this.context.extensionPath, 'media', 'sections.json');
+      try {
+        const stats = fs.statSync(sectionsPath);
+        const fileChanged = stats.mtimeMs > this.lastFetchTimestamp;
+        
+        if (!fileChanged && Date.now() - this.lastFetchTimestamp < CACHE_DURATION) {
+          return this.sections;
+        }
+      } catch (e) {
+        // If we can't stat the file, continue to try reading it
+        console.warn('Failed to stat sections.json', e);
+      }
     }
 
     try {

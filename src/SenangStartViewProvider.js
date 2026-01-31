@@ -44,7 +44,11 @@ class SenangStartViewProvider {
         case 'copySection':
           const section = this.sectionsManager.getSectionBySlug(message.slug);
           if (section) {
-            await vscode.env.clipboard.writeText(section.code);
+            const codeToCopy = message.type === 'SS' && section.ss_code 
+              ? section.ss_code 
+              : section.code;
+              
+            await vscode.env.clipboard.writeText(codeToCopy);
             vscode.window.showInformationMessage(`${section.name} code copied!`);
           }
           break;
