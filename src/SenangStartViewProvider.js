@@ -1,112 +1,99 @@
 const vscode = require('vscode');
 const SectionsManager = require('./managers/SectionsManager');
 const IconsManager = require('./managers/IconsManager');
+const ShapesManager = require('./managers/ShapesManager');
+const libraries = require('./libraries');
 const WebviewGenerator = require('./webview/WebviewGenerator');
 
 class SenangStartViewProvider {
   constructor(context) {
-    this._view = undefined;
     this.context = context;
-    this.activeTab = 'sections'; // 'sections', 'icons', 'libraries'
-    
-    // Initialize Managers
+    this.activeTab = 'sections';
+    this.query = '';
+    this.assetKind = 'shapes';
     this.sectionsManager = new SectionsManager(context);
     this.iconsManager = new IconsManager();
-    
-    // Initial fetch
-    this.sectionsManager.fetchSections();
+    this.shapesManager = new ShapesManager();
+    this.sectionsManager.fetchSections().then(() => this.updateWebview());
   }
 
   resolveWebviewView(webviewView) {
     this._view = webviewView;
-    webviewView.webview.options = {
-      enableScripts: true,
-      enableForms: true,
-      enableCommandUris: true,
-      retainContextWhenHidden: true
-    };
-
+    webviewView.webview.options = { enableScripts: true, localResourceRoots: [] };
+    this.context.subscriptions.push(
+      webviewView.onDidChangeVisibility(() => this.updateWebview()),
+      webviewView.webview.onDidReceiveMessage(message => this.handleMessage(message)),
+      webviewView.onDidDispose(() => { this._view = undefined; })
+    );
     webviewView.webview.html = WebviewGenerator.getWebviewContent();
-    
-    // Add visibility change handler
-    webviewView.onDidChangeVisibility(() => {
-      if (webviewView.visible) {
-        this.updateWebview();
-      }
-    });
-    
-    // Initial update
-    this.updateWebview();
-    
-    // Handle messages
-    webviewView.webview.onDidReceiveMessage(async message => {
-      switch (message.command) {
-        case 'copySection':
-          const section = this.sectionsManager.getSectionBySlug(message.slug);
-          if (section) {
-            const codeToCopy = message.type === 'SS' && section.ss_code 
-              ? section.ss_code 
-              : section.code;
-              
-            await vscode.env.clipboard.writeText(codeToCopy);
-            vscode.window.showInformationMessage(`${section.name} code copied!`);
-          }
-          break;
-        case 'copyIcon':
-          const icon = this.iconsManager.getIconByName(message.name);
-          if (icon) {
-            const textToCopy = message.type === 'icon' 
-              ? `<ss-icon icon="${icon.name}"></ss-icon>` 
-              : icon.svg;
-              
-            await vscode.env.clipboard.writeText(textToCopy);
-            vscode.window.showInformationMessage(`${icon.name} copied!`);
-          }
-          break;
-        case 'search':
-          this.filterContent(message.query, message.tab);
-          break;
-        case 'switchTab':
-          this.activeTab = message.tab;
-          this.updateWebview();
-          break;
-      }
-    });
   }
 
-  fetchSections() {
-    return this.sectionsManager.fetchSections(true).then(() => {
-        this.updateWebview();
-    });
+  async handleMessage(message) {
+    if (!message || typeof message.command !== 'string') return;
+    try {
+      switch (message.command) {
+        case 'ready':
+        case 'search':
+        case 'switchTab':
+          if (['sections', 'icons', 'shapes', 'libraries'].includes(message.tab)) this.activeTab = message.tab;
+          if (typeof message.query === 'string') this.query = message.query.slice(0, 200);
+          if (['shapes', 'patterns'].includes(message.kind)) this.assetKind = message.kind;
+          this.updateWebview();
+          break;
+        case 'copySection': {
+          const section = this.sectionsManager.getSectionBySlug(message.slug);
+          if (section) await this.copy(message.type === 'SS' && section.ss_code ? section.ss_code : section.code, section.name);
+          break;
+        }
+        case 'copyIcon': {
+          const icon = this.iconsManager.getIconByName(message.name);
+          if (icon) await this.copy(message.type === 'svg' ? icon.svg : `<ss-icon icon="${icon.name}"></ss-icon>`, icon.name);
+          break;
+        }
+        case 'copyShape': {
+          const item = this.shapesManager.getItem(message.id, message.kind);
+          if (item) await this.copy(message.type === 'svg' ? item.svg : item.code, item.name);
+          break;
+        }
+        case 'copyLibrary': {
+          const library = libraries.find(item => item.id === message.id);
+          if (library && ['install', 'cdn'].includes(message.type)) {
+            await this.copy(library[message.type], `${library.name} ${message.type === 'install' ? 'install command' : 'CDN setup'}`);
+          }
+          break;
+        }
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`SenangStart: ${error.message}`);
+    }
+  }
+
+  async copy(text, label) {
+    if (typeof text !== 'string') return;
+    await vscode.env.clipboard.writeText(text);
+    vscode.window.showInformationMessage(`${label} copied!`);
+  }
+
+  async fetchSections() {
+    await this.sectionsManager.fetchSections(true);
+    this.updateWebview();
   }
 
   loadIcons() {
-      // Proxy to manager if needed, but manager loads in constructor mostly.
-      // We can trigger a reload if we added that capability.
-      this.iconsManager.loadIcons();
-      this.updateWebview();
+    this.iconsManager.loadIcons();
+    this.updateWebview();
   }
 
-  filterContent(query, tab) {
-    let filteredSections = this.sectionsManager.getSections();
-    let filteredIcons = this.iconsManager.getIcons();
-
-    if (query) {
-      filteredSections = this.sectionsManager.filter(query);
-      filteredIcons = this.iconsManager.filter(query);
+  updateWebview() {
+    if (!this._view || !this._view.visible) return;
+    const message = { command: 'updateContent', tab: this.activeTab };
+    switch (this.activeTab) {
+      case 'sections': message.sections = this.sectionsManager.filter(this.query); break;
+      case 'icons': message.icons = this.iconsManager.filter(this.query); break;
+      case 'shapes': message.shapes = this.shapesManager.getItems(this.assetKind, this.query); break;
+      case 'libraries': message.libraries = libraries; break;
     }
-    
-    this.updateWebview(filteredSections, filteredIcons);
-  }
-
-  updateWebview(sections = null, icons = null) {
-    if (this._view && this._view.visible) {
-      this._view.webview.postMessage({
-        command: 'updateContent',
-        sections: (sections || this.sectionsManager.getSections()).map(s => ({ ...s, icon: s.icon })),
-        icons: icons || this.iconsManager.getIcons()
-      });
-    }
+    this._view.webview.postMessage(message);
   }
 }
 

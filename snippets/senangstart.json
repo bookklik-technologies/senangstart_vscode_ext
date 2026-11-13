@@ -1,0 +1,94 @@
+{
+  "SenangStart CSS browser setup": {
+    "prefix": "ss-css-cdn",
+    "body": ["<script src=\"https://unpkg.com/@bookklik/senangstart-css@0.4.2/dist/senangstart-css.min.js\"></script>"],
+    "description": "Load SenangStart CSS 0.4.2 for zero-build attribute styling."
+  },
+  "SenangStart CSS layout": {
+    "prefix": "ss-layout",
+    "body": [
+      "<section layout=\"${1:flex col center}\" space=\"${2:p:big g:medium}\" visual=\"${3:bg:primary text:white rounded:big}\">",
+      "  $0",
+      "</section>"
+    ],
+    "description": "Natural-language layout, spacing, and visual attributes. Requires SenangStart CSS."
+  },
+  "SenangStart Icons browser setup": {
+    "prefix": "ss-icons-cdn",
+    "body": ["<script src=\"https://unpkg.com/@bookklik/senangstart-icons@1.0.17/dist/senangstart-icon.min.js\"></script>"],
+    "description": "Register the ss-icon component with Icons 1.0.17."
+  },
+  "SenangStart icon": {
+    "prefix": "ss-icon",
+    "body": ["<ss-icon icon=\"${1:heart}\" aria-label=\"${2:Favorite}\"></ss-icon>$0"],
+    "description": "Insert an icon component. Requires the Icons browser bundle."
+  },
+  "SenangStart Actions browser setup": {
+    "prefix": "ss-actions-cdn",
+    "body": ["<script defer src=\"https://unpkg.com/@bookklik/senangstart-actions@0.1.7/dist/senangstart-actions.min.js\"></script>"],
+    "description": "Load SenangStart Actions 0.1.7 after the document is parsed."
+  },
+  "SenangStart Actions counter": {
+    "prefix": "ss-counter",
+    "body": [
+      "<div ss-data=\"{ count: ${1:0} }\">",
+      "  <button type=\"button\" ss-on:click=\"count--\" aria-label=\"Decrease count\">-</button>",
+      "  <span ss-text=\"count\" aria-live=\"polite\"></span>",
+      "  <button type=\"button\" ss-on:click=\"count++\" aria-label=\"Increase count\">+</button>",
+      "</div>",
+      "$0"
+    ],
+    "description": "Reactive state and event bindings. Requires SenangStart Actions."
+  },
+  "SenangStart Actions toggle": {
+    "prefix": "ss-toggle",
+    "body": [
+      "<div ss-data=\"{ open: false }\">",
+      "  <button type=\"button\" ss-on:click=\"open = !open\" ss-bind:aria-expanded=\"open ? 'true' : 'false'\" aria-controls=\"${1:details}\">${2:Toggle details}</button>",
+      "  <div id=\"${1:details}\" ss-show=\"open\" hidden ss-bind:hidden=\"!open\">$0</div>",
+      "</div>"
+    ],
+    "description": "Toggle content with reactive visibility and accessibility attributes. Requires Actions."
+  },
+  "SenangStart Shapes browser setup": {
+    "prefix": "ss-shapes-cdn",
+    "body": ["<script src=\"https://unpkg.com/@bookklik/senangstart-shapes@0.1.2/dist/senangstart-shape.min.js\"></script>"],
+    "description": "Register the ss-shape component with Shapes 0.1.2."
+  },
+  "SenangStart shape": {
+    "prefix": "ss-shape",
+    "body": ["<ss-shape shape=\"${1:soft-nova}\" variant=\"${2:duotone}\"></ss-shape>$0"],
+    "description": "Insert a shape with a supported variant. Requires the Shapes browser bundle."
+  },
+  "SenangStart pattern stylesheet": {
+    "prefix": "ss-patterns-cdn",
+    "body": ["<link rel=\"stylesheet\" href=\"https://unpkg.com/@bookklik/senangstart-shapes@0.1.2/dist/patterns.css\">"],
+    "description": "Load the Shapes 0.1.2 repeating background patterns; no JavaScript required."
+  },
+  "SenangStart background pattern": {
+    "prefix": "ss-pattern",
+    "body": ["<div class=\"ss-pattern-${1:leaf-weave}\" style=\"min-height: ${2:240px}; --ss-pattern-size: ${3:120px 120px}\">$0</div>"],
+    "description": "Insert a repeating background. Requires the patterns stylesheet."
+  },
+  "SenangStart XR browser setup": {
+    "prefix": "ss-xr-cdn",
+    "body": [
+      "<script src=\"https://aframe.io/releases/1.8.0/aframe.min.js\"></script>",
+      "<script src=\"https://unpkg.com/@bookklik/senangstart-xr@2.1.0/dist/senangstart-xr.min.js\"></script>"
+    ],
+    "description": "Load A-Frame before SenangStart XR 2.1.0. Use in plain HTML."
+  },
+  "SenangStart XR scene": {
+    "prefix": "ss-xr-scene",
+    "body": [
+      "<a-scene>",
+      "  <a-sxr-flex-container flex-direction=\"column\" justify-content=\"center\" align-items=\"center\" width=\"3\" height=\"2\" position=\"0 1.6 -2\">",
+      "    <a-sxr-button width=\"2\" height=\"0.6\" value=\"${1:Hello XR}\"></a-sxr-button>",
+      "    $0",
+      "  </a-sxr-flex-container>",
+      "  <a-camera><a-sxr-cursor></a-sxr-cursor></a-camera>",
+      "</a-scene>"
+    ],
+    "description": "A minimal XR interface with a camera and interactive cursor. Requires A-Frame and XR."
+  }
+}

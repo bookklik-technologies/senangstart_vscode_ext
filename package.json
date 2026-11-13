@@ -1,9 +1,9 @@
 {
   "name": "senangstart",
   "displayName": "SenangStart",
-  "description": "Browse and copy UI sections from SenangStart collection",
+  "description": "Browse SenangStart sections, icons, shapes and patterns, with library setup and HTML snippets.",
   "publisher": "bookklik-technologies",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bookklik-technologies/senangstart_vscode_ext"
@@ -14,13 +14,35 @@
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Snippets",
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onLanguage:html",
+    "onLanguage:vue",
+    "onLanguage:svelte",
+    "onLanguage:php",
+    "onLanguage:blade"
   ],
   "main": "./src/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "SenangStart",
+      "properties": {
+        "senangstart.cssAutocomplete.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest SenangStart CSS attributes and utility tokens in HTML, Vue, Svelte, PHP, and Blade files."
+        }
+      }
+    },
+    "snippets": [
+      { "language": "html", "path": "./snippets/senangstart.json" },
+      { "language": "vue", "path": "./snippets/senangstart.json" },
+      { "language": "svelte", "path": "./snippets/senangstart.json" },
+      { "language": "php", "path": "./snippets/senangstart.json" }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -35,20 +57,21 @@
         {
           "type": "webview",
           "id": "senangstart-sections",
-          "name": "Extension"
+          "name": "SenangStart"
         }
       ]
     },
     "commands": [
       {
         "command": "senangstart.refreshSections",
+        "category": "SenangStart",
         "title": "Refresh Sections",
         "icon": "$(refresh)"
       }
     ]
   },
   "dependencies": {
-    "@bookklik/senangstart-icons": "^1.0.14",
-    "axios": "^1.6.2"
+    "@bookklik/senangstart-icons": "1.0.17",
+    "@bookklik/senangstart-shapes": "0.1.2"
   }
 }

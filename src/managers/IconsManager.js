@@ -22,13 +22,13 @@ class IconsManager {
 
       // Try to enhance with tags from icons.json source if available
       try {
-        const jsonPath = path.join(__dirname, '..', '..', 'node_modules', '@bookklik', 'senangstart-icons', 'src', 'icons.json');
+        const jsonPath = path.resolve(path.dirname(require.resolve('@bookklik/senangstart-icons/icons')), '..', 'src', 'icons.json');
         if (fs.existsSync(jsonPath)) {
           const iconsData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
           
-          // Map tags to existing icons
+          const metadata = new Map(iconsData.map(icon => [icon.slug, icon]));
           iconsList.forEach(icon => {
-            const meta = iconsData.find(i => i.slug === icon.name);
+            const meta = metadata.get(icon.name);
             if (meta && meta.tags) {
               icon.tags = meta.tags;
             }
@@ -55,10 +55,10 @@ class IconsManager {
 
   filter(query) {
     if (!query) return this.icons;
-    const q = query.toLowerCase();
-    return this.icons.filter(i => {
-      // Search in tags
-      return i.tags.some(tag => tag.toLowerCase().includes(q));
+    const terms = query.toLowerCase().trim().split(/\s+/);
+    return this.icons.filter(icon => {
+      const text = [icon.name, ...icon.tags].join(' ').toLowerCase();
+      return terms.every(term => text.includes(term));
     });
   }
 }

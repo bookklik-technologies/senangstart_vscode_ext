@@ -1,202 +1,176 @@
-const icons = require('@bookklik/senangstart-icons/icons');
-
-module.exports = `
+module.exports = String.raw`
   const vscode = acquireVsCodeApi();
   const searchInput = document.getElementById('searchInput');
-  let currentTab = 'sections';
-  let currentIconType = 'icon';
-  let currentSectionType = 'SS'; // Default to SS
-  
-  // Tab Switching
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Update UI
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      
-      tab.classList.add('active');
-      currentTab = tab.dataset.tab;
-      document.getElementById(currentTab + '-content').classList.add('active');
-      
-      // Toggle Search Visibility (hide for docs)
-      document.getElementById('searchContainer').style.display = 
-        currentTab === 'libraries' ? 'none' : 'flex';
-      
-      const iconTypeToggle = document.getElementById('iconTypeToggle');
-      const sectionTypeToggle = document.getElementById('sectionTypeToggle');
+  const saved = vscode.getState() || {};
+  let currentTab = ['sections', 'icons', 'shapes', 'libraries'].includes(saved.tab) ? saved.tab : 'sections';
+  let currentIconType = saved.iconType === 'svg' ? 'svg' : 'icon';
+  let currentSectionType = saved.sectionType === 'TW' ? 'TW' : 'SS';
+  let searchTimer;
+  searchInput.value = typeof saved.query === 'string' ? saved.query : '';
+  document.getElementById('assetKind').value = saved.kind === 'patterns' ? 'patterns' : 'shapes';
 
-      if (iconTypeToggle) {
-        iconTypeToggle.style.display = currentTab === 'icons' ? 'flex' : 'none';
-      }
-      
-      if (sectionTypeToggle) {
-        sectionTypeToggle.style.display = currentTab === 'sections' ? 'flex' : 'none';
-      }
-        
-      // Rerun search for new tab context if there is a query
-      if (searchInput.value) {
-          triggerSearch();
-      }
+  function sendState(command = 'search') {
+    clearTimeout(searchTimer);
+    const state = {
+      tab: currentTab, query: searchInput.value,
+      kind: document.getElementById('assetKind').value,
+      iconType: currentIconType, sectionType: currentSectionType
+    };
+    vscode.setState(state);
+    vscode.postMessage({ command, ...state });
+  }
+
+  function updateControls() {
+    document.querySelectorAll('.tab').forEach(tab => {
+      const active = tab.dataset.tab === currentTab;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-pressed', String(active));
     });
-  });
-  
-  // Icon Type Toggles
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      // Find parent group to only toggle buttons within the same group
-      const group = btn.closest('.button-group');
-      if (!group) return;
-
-      group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // Update state based on which group it belongs to
-      if (group.id === 'iconTypeToggle') {
-          currentIconType = btn.dataset.type;
-      } else if (group.id === 'sectionTypeToggle') {
-          currentSectionType = btn.dataset.type;
-      }
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === currentTab + '-content');
     });
+    document.getElementById('searchContainer').hidden = currentTab === 'libraries';
+    document.getElementById('sectionTypeToggle').hidden = currentTab !== 'sections';
+    document.getElementById('iconTypeToggle').hidden = !['icons', 'shapes'].includes(currentTab);
+    document.getElementById('assetOptions').hidden = currentTab !== 'shapes';
+    document.getElementById('collectionHelp').textContent = currentTab === 'libraries' ?
+      'Browser setup is for your project, not the extension webview.' :
+      currentTab === 'shapes' && document.getElementById('assetKind').value === 'patterns' ?
+      'Pattern classes require @bookklik/senangstart-shapes/patterns.css. Click or drag to copy.' :
+      'Click to copy, or drag into your editor. Components require their library browser setup.';
+    searchInput.placeholder = 'Search ' + currentTab + '...';
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+      const selected = button.closest('.button-group').id === 'sectionTypeToggle' ? currentSectionType : currentIconType;
+      button.classList.toggle('active', button.dataset.type === selected);
+      button.setAttribute('aria-pressed', String(button.dataset.type === selected));
+    });
+    document.getElementById('resultCount').textContent = '';
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+    currentTab = tab.dataset.tab;
+    updateControls();
+    sendState('switchTab');
+  }));
+  document.querySelectorAll('.toggle-btn').forEach(button => button.addEventListener('click', () => {
+    if (button.closest('.button-group').id === 'sectionTypeToggle') currentSectionType = button.dataset.type;
+    else currentIconType = button.dataset.type;
+    updateControls();
+    sendState();
+  }));
+  document.getElementById('assetKind').addEventListener('change', () => { updateControls(); sendState(); });
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => sendState(), 150);
   });
 
-  // Search
-  searchInput.addEventListener('input', triggerSearch);
+  function svgPreview(source) {
+    const documentSvg = new DOMParser().parseFromString(source || '', 'image/svg+xml');
+    const root = documentSvg.documentElement;
+    if (root.localName !== 'svg' || documentSvg.querySelector('parsererror')) return document.createTextNode('Preview unavailable');
+    const allowed = new Set(['svg', 'g', 'path', 'circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'defs', 'linearGradient', 'radialGradient', 'stop', 'clipPath', 'mask', 'pattern', 'use', 'title', 'desc']);
+    [root, ...root.querySelectorAll('*')].forEach(element => {
+      if (!allowed.has(element.localName) || element.namespaceURI !== 'http://www.w3.org/2000/svg') { element.remove(); return; }
+      [...element.attributes].forEach(attribute => {
+        if (/^on/i.test(attribute.name) || /^(style|src)$/i.test(attribute.name) ||
+          (/href$/i.test(attribute.name) && !attribute.value.startsWith('#')) ||
+          (/url\s*\(/i.test(attribute.value) && !/^url\(#[\w-]+\)$/.test(attribute.value))) {
+          element.removeAttribute(attribute.name);
+        }
+      });
+    });
+    root.setAttribute('aria-hidden', 'true');
+    root.setAttribute('focusable', 'false');
+    if (!root.hasAttribute('viewBox')) {
+      const width = parseFloat(root.getAttribute('width')) || 322;
+      const height = parseFloat(root.getAttribute('height')) || 191;
+      root.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    }
+    return document.importNode(root, true);
+  }
 
-  function triggerSearch() {
-      vscode.postMessage({
-      command: 'search',
-      query: searchInput.value,
-      tab: currentTab
+  function renderItems(items, kind) {
+    const grid = document.getElementById(kind + 'Grid');
+    grid.replaceChildren();
+    document.getElementById('resultCount').textContent = items.length + ' results';
+    if (!items.length) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'No matches. Try another name, category, or keyword.';
+      grid.appendChild(empty);
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => {
+      const card = document.createElement('button');
+      card.className = 'card ' + (kind === 'icons' ? 'icon-card' : 'section-card');
+      card.type = 'button';
+      card.draggable = true;
+      card.title = 'Copy ' + item.name;
+      const preview = document.createElement('div');
+      preview.className = kind === 'icons' ? 'icon-preview' : 'section-preview';
+      preview.appendChild(svgPreview(kind === 'sections' ? item.icon : item.svg));
+      const label = document.createElement('span');
+      label.className = 'card-label';
+      label.textContent = item.name;
+      card.append(preview, label);
+      card.addEventListener('click', () => {
+        if (kind === 'sections') vscode.postMessage({ command: 'copySection', slug: item.slug, type: currentSectionType });
+        else if (kind === 'icons') vscode.postMessage({ command: 'copyIcon', name: item.name, type: currentIconType });
+        else vscode.postMessage({ command: 'copyShape', id: item.id, kind: document.getElementById('assetKind').value, type: currentIconType });
+      });
+      card.addEventListener('dragstart', event => {
+        const text = kind === 'sections' ? (currentSectionType === 'SS' && item.ss_code ? item.ss_code : item.code) :
+          currentIconType === 'svg' ? item.svg : kind === 'icons' ? '<ss-icon icon="' + item.name + '"></ss-icon>' : item.code;
+        event.dataTransfer.setData('text/plain', text);
+        event.dataTransfer.effectAllowed = 'copy';
+      });
+      fragment.appendChild(card);
+    });
+    grid.appendChild(fragment);
+  }
+
+  function renderLibraries(libraries) {
+    const list = document.getElementById('librariesList');
+    list.replaceChildren();
+    libraries.forEach(library => {
+      const entry = document.createElement('section');
+      entry.className = 'library-entry';
+      const title = document.createElement('h2');
+      title.textContent = library.name + ' ' + library.version;
+      const description = document.createElement('p');
+      description.textContent = library.description;
+      const packageName = document.createElement('code');
+      packageName.textContent = library.packageName;
+      const actions = document.createElement('div');
+      actions.className = 'library-actions';
+      [['install', 'Copy npm'], ['cdn', 'Copy CDN']].forEach(([type, text]) => {
+        const button = document.createElement('button');
+        button.className = 'library-link';
+        button.textContent = text;
+        button.addEventListener('click', () => vscode.postMessage({ command: 'copyLibrary', id: library.id, type }));
+        actions.appendChild(button);
+      });
+      [['docs', 'Docs'], ['repository', 'GitHub']].forEach(([key, text]) => {
+        const link = document.createElement('a');
+        link.href = library[key];
+        link.className = 'library-link';
+        link.textContent = text;
+        actions.appendChild(link);
+      });
+      entry.append(title, description, packageName, actions);
+      list.appendChild(entry);
     });
   }
 
-  // Messaging
   window.addEventListener('message', event => {
     const message = event.data;
-    switch (message.command) {
-      case 'updateContent':
-        renderSections(message.sections);
-        renderIcons(message.icons);
-        break;
-    }
+    if (message.command !== 'updateContent' || message.tab !== currentTab) return;
+    if (message.sections) renderItems(message.sections, 'sections');
+    if (message.icons) renderItems(message.icons, 'icons');
+    if (message.shapes) renderItems(message.shapes, 'shapes');
+    if (message.libraries) renderLibraries(message.libraries);
   });
-
-  function renderSections(sections) {
-    const grid = document.getElementById('sectionsGrid');
-    grid.innerHTML = '';
-    
-    if (!sections || sections.length === 0) {
-      grid.innerHTML = '<div class="empty-state">No sections found</div>';
-      return;
-    }
-
-    sections.forEach(section => {
-      const card = document.createElement('div');
-      card.className = 'card section-card';
-      card.draggable = true;
-      
-      // Drag support
-      card.addEventListener('dragstart', (e) => {
-        const textToDrag = currentSectionType === 'SS' && section.ss_code 
-          ? section.ss_code 
-          : section.code;
-
-        e.dataTransfer.setData('text/plain', textToDrag);
-        e.dataTransfer.effectAllowed = 'copy';
-      });
-      
-      card.addEventListener('click', () => {
-        vscode.postMessage({ command: 'copySection', slug: section.slug, type: currentSectionType });
-      });
-
-      // Create preview container
-      const preview = document.createElement('div');
-      preview.className = 'section-preview';
-      
-      // Create SVG element safely using DOMParser (restored logic)
-      try {
-        if (!section.icon || section.icon.trim() === '') {
-          throw new Error('Empty icon');
-        }
-
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(section.icon, 'image/svg+xml');
-        const parserError = svgDoc.querySelector('parsererror');
-
-        if (parserError) {
-          throw new Error('SVG parsing error');
-        }
-
-        const svgElement = svgDoc.documentElement;
-        
-        if (svgElement) {
-          svgElement.setAttribute('width', '100%');
-          svgElement.setAttribute('height', '100%');
-          // Use original viewBox if available, else default
-          if (!svgElement.hasAttribute('viewBox')) {
-             svgElement.setAttribute('viewBox', '0 0 322 191');
-          }
-          preview.appendChild(svgElement);
-        }
-      } catch (e) {
-        // Render placeholder for failed/missing icons
-        preview.innerHTML = \`
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%; aspect-ratio: 16/9; background: #f3f4f6; color: #9ca3af; font-size: 12px; font-weight: 500;">
-                ${icons['photo']}
-            </div>
-        \`;
-        // console.error('Error rendering icon for', section.name, e);
-      }
-
-      // Label
-      const label = document.createElement('div');
-      label.className = 'card-label';
-      label.textContent = section.name;
-
-      card.appendChild(preview);
-      card.appendChild(label);
-      grid.appendChild(card);
-    });
-  }
-
-  function renderIcons(icons) {
-    const grid = document.getElementById('iconsGrid');
-    grid.innerHTML = '';
-
-    if (!icons || icons.length === 0) {
-      grid.innerHTML = '<div class="empty-state">No icons found</div>';
-      return;
-    }
-
-    icons.forEach(icon => {
-      const card = document.createElement('div');
-      card.className = 'card icon-card';
-      card.draggable = true;
-
-      // Drag support
-      card.addEventListener('dragstart', (e) => {
-        const textToDrag = currentIconType === 'icon' 
-            ? \`<ss-icon icon="\${icon.name}"></ss-icon>\` 
-            : icon.svg;
-
-        e.dataTransfer.setData('text/plain', textToDrag);
-        e.dataTransfer.effectAllowed = 'copy';
-        card.classList.add('dragging');
-      });
-
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-      });
-      
-      card.addEventListener('click', () => {
-        vscode.postMessage({ command: 'copyIcon', name: icon.name, type: currentIconType });
-      });
-
-      card.innerHTML = \`
-        <div class="icon-preview">\${icon.svg}</div>
-        <div class="card-label">\${icon.name}</div>
-      \`;
-      grid.appendChild(card);
-    });
-  }
+  updateControls();
+  sendState('ready');
 `;

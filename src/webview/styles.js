@@ -1,4 +1,12 @@
 module.exports = `
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  button, input, select { font: inherit; }
+  button { color: inherit; }
+  button:focus-visible, a:focus-visible, select:focus-visible {
+    outline: 2px solid var(--vscode-focusBorder);
+    outline-offset: 2px;
+  }
   body {
     padding: 0;
     margin: 0;
@@ -18,8 +26,12 @@ module.exports = `
     flex-shrink: 0;
   }
   .tab {
+    background: transparent;
+    color: inherit;
+    border: 0;
+    min-width: 0;
     flex: 1;
-    padding: 10px;
+    padding: 10px 6px;
     text-align: center;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -49,6 +61,7 @@ module.exports = `
     align-items: center;
   }
   .button-group {
+    flex-shrink: 0;
     display: flex;
     border: 1px solid var(--vscode-input-border);
     border-radius: 2px;
@@ -87,6 +100,7 @@ module.exports = `
     color: var(--vscode-button-foreground);
   }
   #searchInput {
+    min-width: 0;
     width: 100%;
     padding: 6px;
     background-color: var(--vscode-input-background);
@@ -124,6 +138,8 @@ module.exports = `
 
   /* Cards */
   .card {
+    color: inherit;
+    text-align: inherit;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -273,6 +289,21 @@ module.exports = `
     text-align: center;
     opacity: 0.6;
   }
+
+  .asset-options { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+  select { min-width: 0; padding: 4px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); }
+  .collection-help, #resultCount { margin: 0; padding: 6px 10px; font-size: 11px; line-height: 1.5; color: var(--vscode-descriptionForeground); }
+  #resultCount:empty { display: none; }
+  .library-intro { margin: 0 0 16px; line-height: 1.5; }
+  .library-entry { padding: 0 0 16px; border-bottom: 1px solid var(--vscode-widget-border); }
+  .library-entry h2 { margin: 0 0 8px; font-size: 13px; }
+  .library-entry p { font-size: 12px; line-height: 1.5; }
+  .library-entry code { display: block; overflow-wrap: anywhere; font-family: var(--vscode-editor-font-family); font-size: 11px; margin-bottom: 12px; }
+  .library-actions { flex-wrap: wrap; }
+  button.library-link { border: 0; cursor: pointer; }
+  .empty-state { grid-column: 1 / -1; opacity: 1; color: var(--vscode-descriptionForeground); }
+  .tabs { flex-wrap: wrap; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
   /* Drag Ghost */
   .drag-ghost {
